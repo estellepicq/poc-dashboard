@@ -5,7 +5,12 @@ import * as d3Shape from 'd3-shape';
 import * as d3Array from 'd3-array';
 import * as d3Axis from 'd3-axis';
 
-const DATA = [
+interface DateValue {
+  date: Date;
+  value: number;
+}
+
+const DATA: DateValue[] = [
   { date: new Date('2020-08-01'), value: 90 },
   { date: new Date('2020-08-02'), value: 100 },
   { date: new Date('2020-08-03'), value: 70 },
@@ -14,53 +19,54 @@ const DATA = [
 ];
 
 @Component({
-  selector: 'app-d3-chart',
-  templateUrl: './d3-chart.component.html',
-  styleUrls: ['./d3-chart.component.scss']
+  selector: 'app-d3-chart-line',
+  templateUrl: './d3-chart-line.component.html',
+  styleUrls: ['./d3-chart-line.component.scss']
 })
-export class D3ChartComponent implements OnInit {
+export class D3ChartLineComponent implements OnInit {
 
   @ViewChild('svgContainer') svgContainer: ElementRef;
-  // private svg: d3.Selection<SVGSVGElement, any, null, undefined>;
 
-  // pasted from: https://github.com/datencia/d3js-angular-examples/tree/master/src/app/01_line_chart
-  private svg: any;
-  private margin = { top: 20, right: 20, bottom: 30, left: 50 };
+  private svg: d3.Selection<SVGGElement, DateValue, HTMLElement, undefined>;
+  private margin = 50;
   private width = 400;
   private height = 300;
-  private x: any;
-  private y: any;
-  private line: d3Shape.Line<[number, number]>;
+  private x: d3Scale.ScaleTime<number, number>;
+  private y: d3Scale.ScaleLinear<number, number>;
+  private line: d3Shape.Line<DateValue>;
 
   constructor() { }
 
   ngOnInit() {
-    this.initSvg();
-    this.initAxis();
-    this.drawAxis();
-    this.drawLine();
+    this.drawSvg();
+    this.initAxes();
+    this.drawAxes();
+    this.drawData();
   }
 
-  private initSvg() {
-    this.svg = d3.select(this.svgContainer.nativeElement)
+  private drawSvg() {
+    this.svg = d3.select<SVGGElement, DateValue>(this.svgContainer.nativeElement)
+      .append('svg')
+      .attr('width', this.width + this.margin * 2)
+      .attr('height', this.height + this.margin * 2)
       .append('g')
-      .attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')');
+      .attr('transform', 'translate(' + this.margin + ',' + this.margin + ')');
   }
 
-  private initAxis() {
+  private initAxes() {
     this.x = d3Scale.scaleTime().range([0, this.width]);
-    this.y = d3Scale.scaleLinear().range([this.height, 0]);
     this.x.domain(d3Array.extent(DATA, (d) => d.date));
+    this.y = d3Scale.scaleLinear().range([this.height, 0]);
     this.y.domain(d3Array.extent(DATA, (d) => d.value));
   }
 
-  private drawAxis() {
-
+  private drawAxes() {
+    // X Axis
     this.svg.append('g')
       .attr('class', 'axis axis--x')
       .attr('transform', 'translate(0,' + this.height + ')')
       .call(d3Axis.axisBottom(this.x));
-
+    // Y axis
     this.svg.append('g')
       .attr('class', 'axis axis--y')
       .call(d3Axis.axisLeft(this.y))
@@ -70,13 +76,13 @@ export class D3ChartComponent implements OnInit {
       .attr('y', 6)
       .attr('dy', '.71em')
       .style('text-anchor', 'end')
-      .text('Price ($)');
+      .text('Value');
   }
 
-  private drawLine() {
-    this.line = d3Shape.line()
-      .x((d: any) => this.x(d.date))
-      .y((d: any) => this.y(d.value));
+  private drawData() {
+    this.line = d3Shape.line<DateValue>()
+      .x((d: DateValue) => this.x(d.date))
+      .y((d: DateValue) => this.y(d.value));
 
     this.svg.append('path')
       .datum(DATA)

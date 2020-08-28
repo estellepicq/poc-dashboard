@@ -1,0 +1,16 @@
+::ng-deep {
+  .bar {
+    fill: steelblue;
+  }
+
+  .bar:hover {
+      fill: brown;
+  }
+
+  .axis-title {
+      fill: none;
+      stroke: black;
+      stroke-width: 0.5px;
+  }
+
+}
