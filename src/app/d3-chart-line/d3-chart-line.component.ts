@@ -25,7 +25,7 @@ const DATA: DateValue[] = [
 })
 export class D3ChartLineComponent implements OnInit {
 
-  @ViewChild('svgContainer') svgContainer: ElementRef;
+  @ViewChild('svgContainer', { static: true }) svgContainer: ElementRef;
 
   private svg: d3.Selection<SVGGElement, DateValue, HTMLElement, undefined>;
   private margin = 50;

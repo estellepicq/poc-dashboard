@@ -47,7 +47,7 @@ const STATISTICS: Frequency[] = [
 })
 export class D3ChartBarComponent implements OnInit {
 
-  @ViewChild('svgContainer') svgContainer: ElementRef;
+  @ViewChild('svgContainer', { static: true }) svgContainer: ElementRef;
 
   private svg: d3.Selection<SVGGElement, Frequency, HTMLElement, undefined>;
   private margin = 50;

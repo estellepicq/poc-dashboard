@@ -26,7 +26,7 @@ const POPULATION: PopulationData[] = [
   styleUrls: ['./d3-chart-pie.component.scss']
 })
 export class D3ChartPieComponent implements OnInit {
-  @ViewChild('svgContainer') svgContainer: ElementRef;
+  @ViewChild('svgContainer', { static: true }) svgContainer: ElementRef;
 
   private svg: d3.Selection<SVGGElement, PopulationData, HTMLElement, undefined>;
   private margin = 50;
