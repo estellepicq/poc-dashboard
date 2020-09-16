@@ -1,22 +1,22 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, Input } from '@angular/core';
 import * as d3 from 'd3-selection';
 import * as d3Scale from 'd3-scale';
 import * as d3Shape from 'd3-shape';
 import * as d3Array from 'd3-array';
 import * as d3Axis from 'd3-axis';
 
-interface DateValue {
-  date: Date;
-  value: number;
+export interface D3Serie {
+  data: DataPoint[];
+  color: string;
+  strokeWidth: number;
+  type: string;
+  name: string;
 }
 
-const DATA: DateValue[] = [
-  { date: new Date('2020-08-01'), value: 90 },
-  { date: new Date('2020-08-02'), value: 100 },
-  { date: new Date('2020-08-03'), value: 70 },
-  { date: new Date('2020-08-04'), value: 65 },
-  { date: new Date('2020-08-05'), value: 120 },
-];
+interface DataPoint {
+  date: number;
+  value: number;
+}
 
 @Component({
   selector: 'app-d3-chart-line',
@@ -25,15 +25,16 @@ const DATA: DateValue[] = [
 })
 export class D3ChartLineComponent implements OnInit {
 
+  @Input() series: D3Serie[];
+
   @ViewChild('svgContainer', { static: true }) svgContainer: ElementRef;
 
-  private svg: d3.Selection<SVGGElement, DateValue, HTMLElement, undefined>;
+  private svg: d3.Selection<SVGGElement, DataPoint, HTMLElement, undefined>;
   private margin = 50;
   private width = 400;
   private height = 300;
   private x: d3Scale.ScaleTime<number, number>;
   private y: d3Scale.ScaleLinear<number, number>;
-  private line: d3Shape.Line<DateValue>;
 
   constructor() { }
 
@@ -45,7 +46,7 @@ export class D3ChartLineComponent implements OnInit {
   }
 
   private drawSvg() {
-    this.svg = d3.select<SVGGElement, DateValue>(this.svgContainer.nativeElement)
+    this.svg = d3.select<SVGGElement, DataPoint>(this.svgContainer.nativeElement)
       .append('svg')
       .attr('width', this.width + this.margin * 2)
       .attr('height', this.height + this.margin * 2)
@@ -54,10 +55,13 @@ export class D3ChartLineComponent implements OnInit {
   }
 
   private initAxes() {
-    this.x = d3Scale.scaleTime().range([0, this.width]);
-    this.x.domain(d3Array.extent(DATA, (d) => d.date));
+    const dataPoints = this.series.map(serie => serie.data).reduce((acc, curr) => acc.concat(curr), []);
+    const dates: number[] = dataPoints.map(dataPoint => dataPoint.date);
+    this.x = d3Scale.scaleUtc().range([0, this.width]);
+    this.x.domain(d3Array.extent(dates));
+
     this.y = d3Scale.scaleLinear().range([this.height, 0]);
-    this.y.domain(d3Array.extent(DATA, (d) => d.value));
+    this.y.domain(d3Array.extent(dataPoints, (d) => d.value));
   }
 
   private drawAxes() {
@@ -72,22 +76,27 @@ export class D3ChartLineComponent implements OnInit {
       .call(d3Axis.axisLeft(this.y))
       .append('text')
       .attr('class', 'axis-title')
-      .attr('transform', 'rotate(-90)')
-      .attr('y', 6)
-      .attr('dy', '.71em')
+      .attr('y', -15)
+      // .attr('transform', 'rotate(-90)')
+      // .attr('y', -30)
+      // .attr('dy', '0')
       .style('text-anchor', 'end')
       .text('Value');
   }
 
   private drawData() {
-    this.line = d3Shape.line<DateValue>()
-      .x((d: DateValue) => this.x(d.date))
-      .y((d: DateValue) => this.y(d.value));
+    this.series.forEach(serie => {
+      const data = serie.data;
+      const line: d3Shape.Line<DataPoint> = d3Shape.line<DataPoint>()
+        .x((d: DataPoint) => this.x(d.date))
+        .y((d: DataPoint) => this.y(d.value));
 
-    this.svg.append('path')
-      .datum(DATA)
-      .attr('class', 'line')
-      .attr('d', this.line);
+      this.svg.append('path')
+        .datum(data)
+        .attr('class', 'line')
+        .attr('style', `stroke: ${serie.color}; stroke-width: ${serie.strokeWidth || 1}px`)
+        .attr('d', line);
+    });
   }
 
 }
