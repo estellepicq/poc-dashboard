@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { D3Serie } from './d3-chart-line/d3-chart-line.component';
+import { D3TimeSeries } from './time-series-chart/time-series-chart.component';
 
 @Component({
   selector: 'app-root',
@@ -7,9 +7,8 @@ import { D3Serie } from './d3-chart-line/d3-chart-line.component';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'poc-dashboard';
 
-  public lineSeries: D3Serie[] = [
+  public timeSeries: D3TimeSeries[] = [
     {
       name: 'toto',
       color: '#000',
@@ -25,7 +24,7 @@ export class AppComponent {
     },
     {
       name: 'tutu',
-      color: '#ccc',
+      color: 'red',
       type: 'line',
       strokeWidth: 1.5,
       data: [
@@ -34,6 +33,18 @@ export class AppComponent {
         { date: 1599939653000, value: 30 },
         { date: 1600026053000, value: 25 },
         { date: 1600112453000, value: 10 },
+      ]
+    },
+    {
+      name: 'tata',
+      color: 'blue',
+      type: 'bar',
+      data: [
+        { date: 1599766853000, value: 10 },
+        { date: 1599853253000, value: 20 },
+        { date: 1599939653000, value: 30 },
+        { date: 1600026053000, value: 50 },
+        { date: 1600112453000, value: 40 },
       ]
     }
   ];

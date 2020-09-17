@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { D3ChartLineComponent } from './d3-chart-line.component';
+import { TimeSeriesChartComponent } from './time-series-chart.component';
 
-describe('D3ChartLineComponent', () => {
-  let component: D3ChartLineComponent;
-  let fixture: ComponentFixture<D3ChartLineComponent>;
+describe('TimeSeriesChartComponent', () => {
+  let component: TimeSeriesChartComponent;
+  let fixture: ComponentFixture<TimeSeriesChartComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ D3ChartLineComponent ]
+      declarations: [ TimeSeriesChartComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(D3ChartLineComponent);
+    fixture = TestBed.createComponent(TimeSeriesChartComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
