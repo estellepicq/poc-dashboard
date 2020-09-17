@@ -1,4 +1,9 @@
 .dashboard-container {
 	display: flex;
 	flex-wrap: wrap;
+
+	.chart-container {
+		border: 1px solid;
+		padding: 30px;
+	}
 }

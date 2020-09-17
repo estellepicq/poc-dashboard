@@ -37,7 +37,7 @@ export class AppComponent {
     },
     {
       name: 'tata',
-      color: 'blue',
+      color: 'steelblue',
       type: 'bar',
       data: [
         { date: 1599766853000, value: 10 },
@@ -45,6 +45,18 @@ export class AppComponent {
         { date: 1599939653000, value: 30 },
         { date: 1600026053000, value: 50 },
         { date: 1600112453000, value: 40 },
+      ]
+    },    
+    {
+      name: 'tétété',
+      color: 'red',
+      type: 'bar',
+      data: [
+        { date: 1599766853000, value: 50 },
+        { date: 1599853253000, value: 10 },
+        { date: 1599939653000, value: 60 },
+        { date: 1600026053000, value: 4 },
+        { date: 1600112453000, value: 17 },
       ]
     }
   ];

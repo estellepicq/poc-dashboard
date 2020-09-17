@@ -1,23 +1,24 @@
 ::ng-deep {
-  .axis {
-  font: 10px sans-serif;
+    .legend {
+        .legend-marker {
+            margin: 0 100px;
+        }
+    }
 }
+//   .axis {
+//   font: 10px sans-serif;
+// }
 
-.axis path,
-.axis line {
-  fill: none;
-  stroke: #000;
-}
+// .axis path,
+// .axis line {
+//   fill: none;
+//   stroke: #000;
+// }
 
-.axis-title {
-  fill: none;
-  stroke: black;
-  stroke-width: 0.5px;
-}
+// .axis-title {
+//   fill: none;
+//   stroke: black;
+//   stroke-width: 0.5px;
+// }
 
-.line {
-  fill: none;
-  stroke: steelblue;
-  stroke-width: 1.5px;
-}
-}
+// }
