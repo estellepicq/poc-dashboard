@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { D3TimeSeries } from './time-series-chart/time-series-chart.component';
+import { D3TimeSerie } from './time-series-chart/time-series-chart.component';
 
 @Component({
   selector: 'app-root',
@@ -8,7 +8,7 @@ import { D3TimeSeries } from './time-series-chart/time-series-chart.component';
 })
 export class AppComponent {
 
-  public timeSeries: D3TimeSeries[] = [
+  public timeSeries: D3TimeSerie[] = [
     {
       name: 'toto',
       color: '#000',

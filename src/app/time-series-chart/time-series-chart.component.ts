@@ -5,7 +5,7 @@ import * as d3Shape from 'd3-shape';
 import * as d3Array from 'd3-array';
 import * as d3Axis from 'd3-axis';
 
-export interface D3TimeSeries {
+export interface D3TimeSerie {
   data: TimeDataPoint[];
   color: string;
   type: 'line' | 'curve' | 'bar';
@@ -25,7 +25,7 @@ interface TimeDataPoint {
 })
 export class TimeSeriesChartComponent implements OnInit {
   
-  @Input() series: D3TimeSeries[];
+  @Input() series: D3TimeSerie[];
   
   @ViewChild('svgContainer', { static: true }) svgContainer: ElementRef;
   
@@ -35,6 +35,7 @@ export class TimeSeriesChartComponent implements OnInit {
   private height = 300;
   private x: d3Scale.ScaleTime<number, number>;
   private y: d3Scale.ScaleLinear<number, number>;
+  private tooltip;
   
   constructor() { }
   
@@ -57,15 +58,13 @@ export class TimeSeriesChartComponent implements OnInit {
   
   private initAxes() {
     const dataPoints = this.series.map(serie => serie.data).reduce((acc, curr) => acc.concat(curr), []);
-    const dates: number[] = dataPoints.map(dataPoint => dataPoint.date);
-    const values: number[] = dataPoints.map(dataPoint => dataPoint.value).concat(0);
     this.x = d3Scale.scaleUtc()
     .range([0, this.width])
-    .domain(d3Array.extent(dates));
+    .domain([d3Array.min(dataPoints, d => d.date) - 43200000, d3Array.max(dataPoints, d => d.date) + 43200000]); // show 1/2 day margin
     
     this.y = d3Scale.scaleLinear()
     .range([this.height, 0])
-    .domain(d3Array.extent(values));
+    .domain([0, d3Array.max(dataPoints, d => d.value)]);
   }
   
   private drawAxes() {
@@ -85,80 +84,80 @@ export class TimeSeriesChartComponent implements OnInit {
     .text('Value');
   }
   
-  private drawData() {
-    let serieTypesCount = {};
-    this.series.forEach(serie => {
-      const data = serie.data;
-      serieTypesCount[serie.type] += (serieTypesCount[serie.type] ?? -1);
-      console.log(serieTypesCount);
-      switch (serie.type) {
-        // Bars
-        case 'bar': {
-          this.svg.selectAll('.bar')
-          .data(data)
-          .enter().append('rect')
-          .attr('class', 'bar')
-          .attr('x', (d) => this.x(d.date) + serieTypesCount[serie.type] * 20 )
-          .attr('y', (d) => this.y(d.value) )
-          .attr('width', 30)
-          .attr('height', (d) => this.height - this.y(d.value) )
-          .attr('style', `fill: ${serie.color}`);
-          break;
-        }
-        
-        // Lines and curves
-        case 'line':
-        case 'curve':
-        default: {
-          const line: d3Shape.Line<TimeDataPoint> = d3Shape.line<TimeDataPoint>()
-          .x((d: TimeDataPoint) => this.x(d.date))
-          .y((d: TimeDataPoint) => this.y(d.value));
-          
-          if (serie.type === 'curve') {
-            line.curve(d3Shape.curveCatmullRom.alpha(0.5));
-          }
-          
-          this.svg.append('path')
-          .datum(data)
-          .attr('class', 'line')
-          .attr('stroke', serie.color)
-          .attr('stroke-width', `${serie.strokeWidth}px`)
-          .attr('fill', 'none')
-          .attr('d', line);
-          
-          break;
-        }
+  private drawData(): void {
+    const barSeries = this.series.filter(serie => serie.type === 'bar');
+    const lineSeries = this.series.filter(serie => serie.type === 'line' || serie.type === 'curve');
+    this.drawBars(barSeries);
+    this.drawLines(lineSeries);
+  }
+  
+  private drawBars(barSeries: D3TimeSerie[]): void {
+    const barWidth = 30 / barSeries.length;
+    this.svg.append('g')
+    .selectAll('g')
+    .data(barSeries)
+    .join('g')
+    .attr('fill', (s) => s.color)
+    .style('transform', (s, i) => `translate(${i * barWidth - 15}px,0px)`)
+    .selectAll('rect')
+    // map to data
+    .data(d => d.data)
+    .join('rect')
+    .attr('x', (d)=> this.x(d.date))
+    .attr('y', d => this.y(d.value))
+    .attr('width', barWidth)
+    .attr('height', (d) => this.height - this.y(d.value))
+    // mouseover
+    .on('mouseover', (e) => console.log('bars', e));
+  }
+  
+  private drawLines(lineSeries: D3TimeSerie[]): void {
+    lineSeries.forEach(serie => {
+      const line: d3Shape.Line<TimeDataPoint> = d3Shape.line<TimeDataPoint>()
+      .x((d: TimeDataPoint) => this.x(d.date))
+      .y((d: TimeDataPoint) => this.y(d.value));
+      
+      if (serie.type === 'curve') {
+        line.curve(d3Shape.curveCatmullRom.alpha(0.5));
       }
       
+      this.svg.append('path')
+      .datum(serie.data)
+      .attr('class', 'line')
+      .attr('stroke', serie.color)
+      .attr('stroke-width', `${serie.strokeWidth}px`)
+      .attr('fill', 'none')
+      // mouseover
+      .on('mouseover', (e) => console.log('lines', e))
+      .attr('d', line);
     });
   }
   
-  private drawLegend() {
+  private drawLegend(): void {
     // add legend   
     const legend = this.svg.append('g')
-      .attr('class', 'legend')
-      .attr('height', 100)
-      .attr('width', this.width)
-      .attr('transform', `translate(${this.width / 2 - (this.series.length - 2) * 75},${this.height + 20})`);
-  
+    .attr('class', 'legend')
+    .attr('height', 100)
+    .attr('width', this.width)
+    .attr('transform', `translate(${this.width / 2 - (this.series.length - 2) * 75},${this.height + 20})`);
+    
     legend.selectAll('rect')
-      .data(this.series)
-      .enter()
-      .append('rect')
-      .attr('x', (d, i) => i * 60)
-      .attr('y', 0)
-      .attr('width', 10)
-      .attr('height', 10)
-      .attr('fill', (d) => d.color);
+    .data(this.series)
+    .enter()
+    .append('rect')
+    .attr('x', (d, i) => i * 60)
+    .attr('y', 0)
+    .attr('width', 10)
+    .attr('height', 10)
+    .attr('fill', (d) => d.color);
     
     legend.selectAll('text')
-      .data(this.series)
-      .enter()
-      .append('text')
-      .attr('x', (d, i) => i * 60 + 15)
-      .attr('y', 10)
-      .text((d) => d.name);
-    
+    .data(this.series)
+    .enter()
+    .append('text')
+    .attr('x', (d, i) => i * 60 + 15)
+    .attr('y', 10)
+    .text((d) => d.name);    
   }
-  
+
 }
