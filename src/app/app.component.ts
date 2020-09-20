@@ -10,7 +10,7 @@ export class AppComponent {
 
   public timeSeries: D3TimeSerie[] = [
     {
-      name: 'toto',
+      name: 'Série 1',
       color: 'darkslateblue',
       type: 'line',
       strokeWidth: 1.5,
@@ -23,7 +23,7 @@ export class AppComponent {
       ]
     },
     {
-      name: 'tutu',
+      name: 'Série 2',
       color: 'coral',
       type: 'line',
       strokeWidth: 1.5,
@@ -36,7 +36,7 @@ export class AppComponent {
       ]
     },
     {
-      name: 'tata',
+      name: 'Série 3',
       color: 'steelblue',
       type: 'line',
       data: [
@@ -48,7 +48,7 @@ export class AppComponent {
       ]
     },    
     {
-      name: 'tétété',
+      name: 'Série 4',
       color: 'blueviolet',
       type: 'line',
       data: [

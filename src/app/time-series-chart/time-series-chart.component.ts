@@ -4,6 +4,7 @@ import * as d3Scale from 'd3-scale';
 import * as d3Shape from 'd3-shape';
 import * as d3Array from 'd3-array';
 import * as d3Axis from 'd3-axis';
+import * as d3TimeFormat from 'd3-time-format';
 import { formatDate } from '@angular/common';
 
 export interface D3TimeSerie {
@@ -27,6 +28,7 @@ interface TimeDataPoint {
 export class TimeSeriesChartComponent implements OnInit {
   
   @Input() series: D3TimeSerie[];
+  @Input() title: string;
   
   @ViewChild('svgContainer', { static: true }) svgContainer: ElementRef;
   
@@ -58,10 +60,22 @@ export class TimeSeriesChartComponent implements OnInit {
     .attr('height', this.height + this.margin * 2)
     .append('g')
     .attr('transform', 'translate(' + this.margin + ',' + this.margin + ')');
+
+    // Add optional title
+    if (this.title) {
+      this.svg.append('text')
+        .attr('x', (this.width / 2))             
+        .attr('y', 0 - (this.margin / 2))
+        .attr('text-anchor', 'middle')  
+        .style('font-size', '16px') 
+        .style('text-decoration', 'underline')  
+        .text(this.title);
+    }
   }
   
   private initAxes() {
     const dataPoints = this.series.map(serie => serie.data).reduce((acc, curr) => acc.concat(curr), []);
+  
     this.x = d3Scale.scaleUtc()
     .range([0, this.width])
     .domain(d3Array.extent(dataPoints, d => d.date));
@@ -76,7 +90,7 @@ export class TimeSeriesChartComponent implements OnInit {
     this.svg.append('g')
     .attr('class', 'axis axis--x')
     .attr('transform', 'translate(0,' + this.height + ')')
-    .call(d3Axis.axisBottom(this.x));
+    .call(d3Axis.axisBottom(this.x).tickFormat(d3TimeFormat.timeFormat('%m-%d')));
     // Y axis
     this.svg.append('g')
     .attr('class', 'axis axis--y')
@@ -118,8 +132,9 @@ export class TimeSeriesChartComponent implements OnInit {
       .style('position', 'absolute')
       .style('left', '0')
       .style('top', '0')
-      .style('background-color', '#ccc')
-      .style('padding', 6)
+      .style('background-color', '#eee')
+      .style('padding', '5px')
+      .style('font-size', '12px')
       .style('display', 'none');
       
     // Append a rect over svg area to detect mouse events
@@ -185,13 +200,13 @@ export class TimeSeriesChartComponent implements OnInit {
     .attr('class', 'legend')
     .attr('height', 100)
     .attr('width', this.width)
-    .attr('transform', `translate(${this.width / 2 - (this.series.length - 2) * 75},${this.height + 20})`);
+    .attr('transform', `translate(${this.width / 2 - (this.series.length - 2) * 75},${this.height + 30})`);
     
     legend.selectAll('rect')
     .data(this.series)
     .enter()
     .append('rect')
-    .attr('x', (d, i) => i * 60)
+    .attr('x', (d, i) => d.name.length + i * 70)
     .attr('y', 0)
     .attr('width', 10)
     .attr('height', 10)
@@ -201,7 +216,7 @@ export class TimeSeriesChartComponent implements OnInit {
     .data(this.series)
     .enter()
     .append('text')
-    .attr('x', (d, i) => i * 60 + 15)
+    .attr('x', (d, i) => d.name.length + i * 70 + 15)
     .attr('y', 10)
     .text((d) => d.name);    
   }
@@ -215,7 +230,7 @@ export class TimeSeriesChartComponent implements OnInit {
   private mousemove(): void {
     const mouse = d3.mouse(d3.event.currentTarget);
 
-    d3.selectAll(".mouse-per-line")
+    d3.selectAll('.mouse-per-line')
       .attr('transform', (serie: D3TimeSerie) =>  {
         const dataPoint = this.getDatapointFromMouse(mouse, serie);
 
@@ -245,7 +260,8 @@ export class TimeSeriesChartComponent implements OnInit {
       };
     });
 
-    this.tooltip.html(formatDate(mappedSeries[0].date, 'yyyy-MM-dd', 'fr_FR'))
+    this.tooltip
+      .html(formatDate(mappedSeries[0].date, 'yyyy-MM-dd hh:mm', 'fr_FR'))
       .style('display', 'block')
       .style('left', `${d3.event.pageX + 20}px`)
       .style('top', `${d3.event.pageY - 20}px`)
@@ -253,14 +269,8 @@ export class TimeSeriesChartComponent implements OnInit {
       .data(mappedSeries).enter()
       .append('div')
       .style('color', d => d.color)
-      .style('font-size', 10)
-      .html(d => {
-        return d.name + ' ' + d.value;
-        // var xDate = xScale.invert(mouse[0])
-        // var bisect = d3.bisector(function (d) { return d.date; }).left
-        // var idx = bisect(d.values, xDate)
-        // return d.key.substring(0, 3) + " " + d.key.slice(-1) + ": $" + d.values[idx].premium.toString()
-      });
+      .style('font-size', '11px')
+      .html(d => `${d.name}: ${d.value}`);
   }
 
   private getDatapointFromMouse(mouse: [number, number], serie: D3TimeSerie): TimeDataPoint {
