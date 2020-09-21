@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { D3TimeSerie } from './time-series-chart/time-series-chart.component';
+import { ChartOptions, D3TimeSerie } from './time-series-chart/time-series-chart.component';
 
 @Component({
   selector: 'app-root',
@@ -60,5 +60,14 @@ export class AppComponent {
       ]
     }
   ];
+
+  public options: Partial<ChartOptions> = {
+    title: 'Time series chart',
+    height: 300,
+    width: 400,
+    margin: 50,
+    yConfig: { title: 'Values' },
+    xConfig: { tickFormat: '%d-%m' }
+  };
 
 }

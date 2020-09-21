@@ -5,7 +5,17 @@ import * as d3Shape from 'd3-shape';
 import * as d3Array from 'd3-array';
 import * as d3Axis from 'd3-axis';
 import * as d3TimeFormat from 'd3-time-format';
+import * as d3Time from 'd3-time';
 import { formatDate } from '@angular/common';
+
+export interface ChartOptions {
+  width: number;
+  height: number;
+  margin: number;
+  title: string;
+  yConfig: { title?: string; tickInterval?: number; tickFormat?: string };
+  xConfig: { title?: string; tickInterval?: number; tickFormat?: string };
+}
 
 export interface D3TimeSerie {
   data: TimeDataPoint[];
@@ -28,14 +38,11 @@ interface TimeDataPoint {
 export class TimeSeriesChartComponent implements OnInit {
   
   @Input() series: D3TimeSerie[];
-  @Input() title: string;
+  @Input() options: Partial<ChartOptions>;
   
   @ViewChild('svgContainer', { static: true }) svgContainer: ElementRef;
   
   private svg: d3.Selection<SVGGElement, TimeDataPoint, HTMLElement, undefined>;
-  private margin = 50;
-  private width = 400;
-  private height = 300;
   private x: d3Scale.ScaleTime<number, number>;
   private y: d3Scale.ScaleLinear<number, number>;
   private mousePerLine: d3.Selection<SVGGElement, D3TimeSerie, SVGGElement, TimeDataPoint>;
@@ -56,20 +63,20 @@ export class TimeSeriesChartComponent implements OnInit {
   private drawSvg() {
     this.svg = d3.select<SVGGElement, TimeDataPoint>(this.svgContainer.nativeElement)
     .append('svg')
-    .attr('width', this.width + this.margin * 2)
-    .attr('height', this.height + this.margin * 2)
+    .attr('width', this.options.width + this.options.margin * 2)
+    .attr('height', this.options.height + this.options.margin * 2)
     .append('g')
-    .attr('transform', 'translate(' + this.margin + ',' + this.margin + ')');
+    .attr('transform', 'translate(' + this.options.margin + ',' + this.options.margin + ')');
 
     // Add optional title
-    if (this.title) {
+    if (this.options.title) {
       this.svg.append('text')
-        .attr('x', (this.width / 2))             
-        .attr('y', 0 - (this.margin / 2))
+        .attr('x', (this.options.width / 2))             
+        .attr('y', 0 - (this.options.margin / 2))
         .attr('text-anchor', 'middle')  
         .style('font-size', '16px') 
         .style('text-decoration', 'underline')  
-        .text(this.title);
+        .text(this.options.title);
     }
   }
   
@@ -77,11 +84,11 @@ export class TimeSeriesChartComponent implements OnInit {
     const dataPoints = this.series.map(serie => serie.data).reduce((acc, curr) => acc.concat(curr), []);
   
     this.x = d3Scale.scaleUtc()
-    .range([0, this.width])
+    .range([0, this.options.width])
     .domain(d3Array.extent(dataPoints, d => d.date));
     
     this.y = d3Scale.scaleLinear()
-    .range([this.height, 0])
+    .range([this.options.height, 0])
     .domain([0, d3Array.max(dataPoints, d => d.value)]);
   }
   
@@ -89,17 +96,24 @@ export class TimeSeriesChartComponent implements OnInit {
     // X Axis
     this.svg.append('g')
     .attr('class', 'axis axis--x')
-    .attr('transform', 'translate(0,' + this.height + ')')
-    .call(d3Axis.axisBottom(this.x).tickFormat(d3TimeFormat.timeFormat('%m-%d')));
+    .attr('transform', 'translate(0,' + this.options.height + ')')
+    .call(
+      d3Axis.axisBottom(this.x)
+        .tickFormat(d3TimeFormat.timeFormat(this.options.xConfig?.tickFormat ?? '%b-%d'))
+        .ticks(d3Time.timeDay.every(1))
+    );
     // Y axis
     this.svg.append('g')
     .attr('class', 'axis axis--y')
     .call(d3Axis.axisLeft(this.y))
     .append('text')
-    .attr('class', 'axis-title')
     .attr('y', -15)
     .style('text-anchor', 'end')
-    .text('Value');
+    .style('stroke', '#000')
+    .style('stroke-width', '0.6px')
+    .style('fill', 'none')
+    .style('font', '10px sans-serif')
+    .text(this.options.yConfig?.title ?? '');
   }
 
   private drawTooltip() {
@@ -141,8 +155,8 @@ export class TimeSeriesChartComponent implements OnInit {
     this.mouseG.append('rect')
       .style('fill', 'none')
       .style('pointer-events', 'all')
-      .attr('width', this.width)
-      .attr('height', this.height)
+      .attr('width', this.options.width)
+      .attr('height', this.options.height)
       .on('mouseover', this.mouseover)
       .on('mousemove', this.mousemove.bind(this))
       .on('mouseout', this.mouseout);
@@ -171,7 +185,7 @@ export class TimeSeriesChartComponent implements OnInit {
     .attr('x', (d)=> this.x(d.date))
     .attr('y', d => this.y(d.value))
     .attr('width', barWidth)
-    .attr('height', (d) => this.height - this.y(d.value));
+    .attr('height', (d) => this.options.height - this.y(d.value));
   }
   
   private drawLines(lineSeries: D3TimeSerie[]): void {
@@ -199,8 +213,8 @@ export class TimeSeriesChartComponent implements OnInit {
     const legend = this.svg.append('g')
     .attr('class', 'legend')
     .attr('height', 100)
-    .attr('width', this.width)
-    .attr('transform', `translate(${this.width / 2 - (this.series.length - 2) * 75},${this.height + 30})`);
+    .attr('width', this.options.width)
+    .attr('transform', `translate(${this.options.width / 2 - (this.series.length - 2) * 75},${this.options.height + 30})`);
     
     legend.selectAll('rect')
     .data(this.series)
@@ -235,7 +249,7 @@ export class TimeSeriesChartComponent implements OnInit {
         const dataPoint = this.getDatapointFromMouse(mouse, serie);
 
         d3.select('.mouse-line')
-          .attr('d', () => 'M' + this.x(dataPoint.date) + ',' + (this.height) + ' ' + this.x(dataPoint.date) + ',' + 0);
+          .attr('d', () => 'M' + this.x(dataPoint.date) + ',' + (this.options.height) + ' ' + this.x(dataPoint.date) + ',' + 0);
         return 'translate(' + this.x(dataPoint.date) + ',' + this.y(dataPoint.value) + ')';
       });
 
